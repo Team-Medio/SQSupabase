@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "Responses": "./Helpers/Responses.ts",
+    "VersionManager": "./QueryMethods/VersionManager.ts",
+    "OSEntity" : "./Models/OSEntity.ts"
+  }
+}

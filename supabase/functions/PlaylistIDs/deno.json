@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "Responses": "./Helpers/Responses.ts",
+    "QueryTypes": "./Models/QueryTypes.ts",
+    "RecentQuery": "./QueryMethods/RecentQuery.ts",
+    "MostQuery": "./QueryMethods/MostQuery.ts"
+  }
+}
