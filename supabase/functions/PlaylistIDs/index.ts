@@ -5,18 +5,29 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { ErrorResponse, SuccessResponse } from 'Responses'
-import { FilterType, PeriodType, InsertValueModel_v1 } from "QueryTypes"
-import { RecentQuery } from "RecentQuery"
+import { ErrorResponse, SuccessResponse } from './Helpers/Responses.ts'
+import { FilterType, PeriodType, InsertValueModel_v1 } from "./Models/QueryTypes.ts"
+import { RecentQuery } from "./QueryMethods/RecentQuery.ts"
 import { MostQuery } from "./QueryMethods/MostQuery.ts"
-const defaultClient = (authorization: string) => createClient( 
-  Deno.env.get('SUPABASE_URL') ?? '',
-   Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-  { global: { headers: { Authorization: authorization! } } }
-)
+
+const defaultClient = (authorization: string) => {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? "";
+  const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') ?? "";
+  
+  return createClient(supabaseUrl, supabaseKey, { 
+    global: { headers: { Authorization: authorization! } } 
+  });
+}
+
 
 Deno.serve(async (req: Request) => {
-  if(Deno.env.get('SUPABASE_ANON_KEY') !== req.headers.get('Authorization')) return ErrorResponse("Authorization error", 401);
+  
+  const authHeader = req.headers.get('Authorization');
+  const authAnonKey = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
+  if(Deno.env.get('SUPABASE_ANON_KEY') !== authAnonKey) {
+    return ErrorResponse(`DenoValue: ${Deno.env.get('SUPABASE_ANON_KEY')}\n reqValue: ${req.headers.get('Authorization')?.split(' ')[1]}\n Authorization error`, 401);
+  }
+
   const ActionByRequestMethods: { [key: string]: () => Promise<Response> } = {
     "GET": async ()=>{
       try {
@@ -26,7 +37,7 @@ Deno.serve(async (req: Request) => {
         const limitCount: number = Number(params.get("limitcount")) ?? 0;
         switch(filterType) {
           case FilterType.RECENT: {
-              const { data, error } = await RecentQuery.PlaylistHeadAccessDateVersion(supabase, limitCount);
+              const { data, error } = await RecentQuery.RecentSqoopedPlaylistsVersion(supabase, limitCount);
               return error ? ErrorResponse(error.message, 500) : SuccessResponse(data?.map((x: { id: string }) => x.id) ?? []);
             }
           case FilterType.MOST: {
