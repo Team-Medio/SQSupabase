@@ -14,6 +14,7 @@ export const MostQuery = {
             [PeriodType.WEEK]: "get_weekly_most_sqooped_playlists_v1",
             [PeriodType.MONTH]: "MonthlyMostSqoopedPlaylists",
         };
+        
         const tableName: string = periodMostTable[periodType] ?? "";
         return await supabase.rpc(tableName, {
              now_date: date.toDateString(), 
