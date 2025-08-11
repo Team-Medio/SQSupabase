@@ -24,3 +24,7 @@
 #### 주요 RPC Function
 - `insert_sqooped_log`
   - 파라미터 -> playlist_id (Identifable), now_date (Date), country_code (String)
+
+
+1. 마이그레이션 처리를 어떻게 할 것인가?
+우선 유튜브에서 채널 아이디 추출할 수 있는 메서드를 만들자

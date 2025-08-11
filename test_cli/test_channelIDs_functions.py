@@ -21,7 +21,7 @@ import sys
 # .env 파일이 있으면 자동으로 로드
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(dotenv_path='.env')
 except ImportError:
     # python-dotenv가 설치되지 않은 경우 무시
     pass
@@ -96,51 +96,13 @@ class EdgeFunctionTester:
             return None
         finally:
             print("-" * 40)
-
-    def test_playlist_ids_recent(self):
-        """PlaylistIDs - Recent 필터 테스트"""
-        print("🎵 PlaylistIDs - Recent 필터 테스트")
-        endpoint = "/PlaylistIDs?filter=recent&limitcount=5"
+    
+    def test_channel_ids_hello(self):
+        """ChannelIDs Hello 테스트"""
+        print("📱 ChannelIDs Hello 테스트")
+        endpoint = "/ChannelIDs/hello"
         return self.make_request(endpoint)
-
-    def test_playlist_ids_most(self):
-        """PlaylistIDs - Most 필터 테스트"""
-        print("🎵 PlaylistIDs - Most 필터 테스트")
-        # 일주일 전 날짜로 테스트
-        test_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-        endpoint = f"/PlaylistIDs?filter=most&period=week&date={test_date}&limitcount=3"
-        return self.make_request(endpoint)
-
-    def test_playlist_ids_post(self):
-        """PlaylistIDs - POST 요청 테스트"""
-        print("🎵 PlaylistIDs - POST 요청 테스트")
-        endpoint = "/PlaylistIDs"
-        
-        # 테스트 데이터 - Edge Function에서 기대하는 구조에 맞춤
-        test_data = {
-            "id": f"test-playlist-{int(datetime.now().timestamp())}",
-            "date": datetime.now().isoformat() + "Z",
-            "locale": "KR"  # 기본 국가 코드
-        }
-        
-        print(f"📤 전송 데이터: {json.dumps(test_data, indent=2, ensure_ascii=False)}")
-        return self.make_request(endpoint, "POST", test_data)
-
-    def test_version_manager(self):
-        """VersionManager 테스트"""
-        print("📱 VersionManager 테스트")
-        endpoint = "/VersionManager?os=iOS&version=1.0.0"
-        return self.make_request(endpoint)
-
-    def test_basic_function(self):
-        """기본 연결 테스트 - PlaylistIDs GET 요청으로 대체"""
-        print("🧪 기본 연결 테스트 (PlaylistIDs 사용)")
-        
-        # GET 요청 - recent filter로 연결 테스트
-        print("기본 GET 요청 테스트:")
-        get_result = self.make_request("/PlaylistIDs?filter=recent&limitcount=1")
-        
-        return {"connection_test": get_result}
+    
 
     def run_all_tests(self):
         """모든 테스트 실행"""
@@ -182,12 +144,6 @@ class EdgeFunctionTester:
         print("\n🎮 대화형 테스트 모드")
         print("사용 가능한 명령어:")
         print("  1. recent    - PlaylistIDs Recent 테스트")
-        print("  2. most      - PlaylistIDs Most 테스트")  
-        print("  3. post      - PlaylistIDs POST 테스트")
-        print("  4. version   - VersionManager 테스트")
-        print("  5. test      - 기본 테스트 함수")
-        print("  6. all       - 모든 테스트 실행")
-        print("  7. quit      - 종료")
         
         while True:
             try:
@@ -197,17 +153,7 @@ class EdgeFunctionTester:
                     print("👋 테스트 종료!")
                     break
                 elif command == '1' or command == 'recent':
-                    self.test_playlist_ids_recent()
-                elif command == '2' or command == 'most':
-                    self.test_playlist_ids_most()
-                elif command == '3' or command == 'post':
-                    self.test_playlist_ids_post()
-                elif command == '4' or command == 'version':
-                    self.test_version_manager()
-                elif command == '5' or command == 'test':
-                    self.test_basic_function()
-                elif command == '6' or command == 'all':
-                    self.run_all_tests()
+                    self.test_channel_ids_hello()
                 else:
                     print("❓ 알 수 없는 명령어입니다.")
                     

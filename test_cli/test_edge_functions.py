@@ -21,7 +21,7 @@ import sys
 # .env 파일이 있으면 자동으로 로드
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(dotenv_path='.env')
 except ImportError:
     # python-dotenv가 설치되지 않은 경우 무시
     pass
@@ -120,7 +120,8 @@ class EdgeFunctionTester:
         test_data = {
             "id": f"test-playlist-{int(datetime.now().timestamp())}",
             "date": datetime.now().isoformat() + "Z",
-            "locale": "KR"  # 기본 국가 코드
+            "locale": "KR"
+            # "channelID": f"test-channelID-{int(datetime.now().timestamp())}"
         }
         
         print(f"📤 전송 데이터: {json.dumps(test_data, indent=2, ensure_ascii=False)}")

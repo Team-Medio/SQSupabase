@@ -5,25 +5,19 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { ErrorResponse, SuccessResponse } from './Helpers/Responses.ts'
-import { FilterType, PeriodType, InsertValueModel_v1 } from "./Models/QueryTypes.ts"
-import { RecentQuery } from "./QueryMethods/RecentQuery.ts"
+import { ErrorResponse, SuccessResponse } from 'Responses'
+import { FilterType, PeriodType, InsertValueModel_v1, InsertValueModel_v2 } from "QueryTypes"
+import { RecentQuery } from "RecentQuery"
 import { MostQuery } from "./QueryMethods/MostQuery.ts"
-
-const defaultClient = (authorization: string) => {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? "";
-  const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') ?? "";
-  
-  return createClient(supabaseUrl, supabaseKey, { 
-    global: { headers: { Authorization: authorization! } } 
-  });
-}
-
+const defaultClient = (authorization: string) => createClient( 
+  Deno.env.get('SUPABASE_URL') ?? '',
+   Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+  { global: { headers: { Authorization: authorization! } } }
+)
 
 Deno.serve(async (req: Request) => {
-  
   const authHeader = req.headers.get('Authorization');
-  const authAnonKey = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
+  const authAnonKey = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;  
   if(Deno.env.get('SUPABASE_ANON_KEY') !== authAnonKey) {
     return ErrorResponse(`DenoValue: ${Deno.env.get('SUPABASE_ANON_KEY')}\n reqValue: ${req.headers.get('Authorization')?.split(' ')[1]}\n Authorization error`, 401);
   }
@@ -35,24 +29,24 @@ Deno.serve(async (req: Request) => {
         const params: URLSearchParams = new URLSearchParams(new URL(req.url).search);
         const filterType : FilterType = params.get("filter") as FilterType ?? "";
         const limitCount: number = Number(params.get("limitcount")) ?? 0;
-        switch(filterType) {
-          case FilterType.RECENT: {
-              const { data, error } = await RecentQuery.RecentSqoopedPlaylistsVersion(supabase, limitCount);
+          switch(filterType){
+            case FilterType.RECENT: {
+              const { data, error } = await RecentQuery.PlaylistHeadAccessDateVersion(supabase, limitCount);
               return error ? ErrorResponse(error.message, 500) : SuccessResponse(data?.map((x: { id: string }) => x.id) ?? []);
             }
-          case FilterType.MOST: {
+            case FilterType.MOST: {
               const periodType: PeriodType = params.get("period") as PeriodType ?? "";
               const date:Date = new Date(params.get("date") as string);
               const {data, error} = await MostQuery.v1(supabase, periodType, date, limitCount);
               return error ? ErrorResponse(error.message, 500) : SuccessResponse(data);
+            }
+            default: return ErrorResponse("FilterTypeError", 401);
           }
-          default: return ErrorResponse("FilterTypeError", 401);
-        }
       } catch (err) {
         return new Response(String(err?.message ?? err), { status: 500 })
       }
     },
-    "POST": async ()=> {
+    "POST": async ()=>{
       try {
         const supabase = defaultClient(req.headers.get('Authorization')!);
         const json: InsertValueModel_v1 = await req.json();
@@ -61,6 +55,13 @@ Deno.serve(async (req: Request) => {
             now_date: json.date,
             country_code: json.locale
           });
+        // const json: InsertValueModel_v2 = await req.json();
+        // const res = await supabase.rpc('insert_sqooped_log_v2', { 
+        //     playlistid: json.id,
+        //     nowdate: json.date,
+        //     channelid: json.channelID,
+        //     countrycode: json.locale
+        //   });
         return res.error ?
           ErrorResponse(res.error.message, 500) :
           SuccessResponse(json);

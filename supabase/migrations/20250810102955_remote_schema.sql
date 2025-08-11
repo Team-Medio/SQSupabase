@@ -15,13 +15,7 @@ SET row_security = off;
 CREATE EXTENSION IF NOT EXISTS "pg_cron" WITH SCHEMA "pg_catalog";
 
 
-
-
-
-
 CREATE EXTENSION IF NOT EXISTS "pgsodium";
-
-
 
 
 
@@ -40,16 +34,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
 
 
-
-
-
-
 CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
-
-
-
-
-
 
 CREATE EXTENSION IF NOT EXISTS "pgjwt" WITH SCHEMA "extensions";
 
@@ -310,7 +295,10 @@ $$;
 ALTER FUNCTION "public"."headsaccessbydatedesc"("limitnumber" integer) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."insert_sqooped_log"("playlist_id" character varying, "now_date" timestamp with time zone, "country_code" character varying DEFAULT NULL::character varying) RETURNS "void"
+CREATE OR REPLACE FUNCTION "public"."insert_sqooped_log"(
+  "playlist_id" character varying, 
+  "now_date" timestamp with time zone, 
+  "country_code" character varying DEFAULT NULL::character varying) RETURNS "void"
     LANGUAGE "plpgsql"
     AS $$
 declare
