@@ -36,7 +36,7 @@ Deno.serve(async (req: Request) => {
             }
             case FilterType.MOST: {
               const periodType: PeriodType = params.get("period") as PeriodType ?? "";
-              const date:Date = new Date(params.get("date") as string);
+              const date: Date = new Date(params.get("date") as string);
               const {data, error} = await MostQuery.v1(supabase, periodType, date, limitCount);
               return error ? ErrorResponse(error.message, 500) : SuccessResponse(data);
             }
