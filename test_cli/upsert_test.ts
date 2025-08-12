@@ -1,13 +1,11 @@
 import * as dotenv from 'dotenv'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { YTPlaylistHeadTable } from './Model/DBTables/YTPlaylistHeadTable';
-import { YTPlaylistDTO, YTPlaylistHeadDTO, YTChannelInfoDTO, YTPlaylistBodyDTO, YTPlaylistTypeDTO, TotalInfoTypeDTO, MusicPlatformTypeDTO, MusicInfoTableDTO } from './Model/PublicDTOs';
-import { PlaylistHeadAccessDateTable } from './Model/DBTables/PlaylistHeadAccessDateTable';
+import { YTPlaylistDTO, YTPlaylistHeadDTO, YTChannelInfoDTO, YTPlaylistBodyDTO, YTPlaylistTypeDTO, MusicPlatformTypeDTO, MusicInfoTableDTO } from './Model/PublicDTOs';
 import { MusicInfoJoinTable } from './Model/DBTables/MusicInfoJoinTable';
 import { YTOfficialPlaylistTable } from './Model/DBTables/YTOfficialPlaylistTable';
 import { MusicStartJoinTable } from './Model/DBTables/MusicStartJoinTable';
 import { YTVideoPlaylistTable } from './Model/DBTables/YTVideoPlaylistTable';
-import { RecentSqoopedPlaylists } from './Model/DBTables/RecentSqoopedPlaylists';
 
 
 class PlaylistCachier {
@@ -37,17 +35,13 @@ class PlaylistCachier {
         const channelInfo: YTChannelInfoDTO = head.channel;
 
         if (headDataTable.isShazamed) {
-            // deletePlaylistBody(
-
-            // )
         }
-        console.log("headDataTable: ", headDataTable.toJSON());
-        const { recentData, error } = await this.client.from('RecentSqoopedPlaylists').select()
-        console.log("data: ", recentData);
-        console.log("error: ", error);
+        // const { recentData, error } = await this.client.from('RecentSqoopedPlaylists').select()
+        // console.log("data: ", recentData);
+        // console.log("error: ", error);
         // 1. YTPlaylistHead 나중에 삽입
         const { error: headError } = await this.client.from('YTPlaylistHead').upsert(headDataTable.toJSON()).select();
-        if (headError) throw new Error(`YTPlaylistHead Upsert 실패: ${headError.message}`);
+        if (headError) throw new Error(`YTPlaylistHead Upsert 실패: ${JSON.stringify(headError)}`);
 
         // 2. YTChannelInfo 먼저 삽입 (DTO는 이미 toJSON을 가지고 있음)
         const { error: channelError } = await this.client.from('YTChannelInfo').upsert(channelInfo.toJSON()).select();
@@ -119,32 +113,33 @@ class PlaylistCachier {
     }
 }
 
-const result = dotenv.config({ path: '../.env', debug: true }); // debug: true 추가
+const result = dotenv.config({ path: '.env', debug: true }); // debug: true 추가
 
-const clientURL: string = result.parsed?.SUPABASE_API ?? "";
+const clientAPI: string = result.parsed?.SUPABASE_API ?? "";
 const clientKey: string = result.parsed?.SUPABASE_ANON_KEY ?? "";
-console.log(clientKey, clientURL);
-if (!clientURL || !clientKey) {
+const clientURL: string = result.parsed?.SUPABASE_URL ?? "";
+// console.log(clientKey, clientAPI, clientURL);
+console.log("clientAPI: ", clientAPI);
+console.log("clientURL: ", clientURL);
+console.log("clientKey: ", clientKey);
+if (!clientAPI || !clientKey || !clientURL) {
     throw new Error('SUPABASE_URL과 SUPABASE_ANON_KEY 환경 변수를 설정해주세요.');
 }
 
-const playlistCachier = new PlaylistCachier(clientURL, clientKey);
-
+const playlistCachier = new PlaylistCachier(clientAPI, clientKey);
 
 (async () => {
     try {
         console.log("Upsert 테스트를 시작합니다...");
-
-        // 사용자가 작성한 테스트 데이터로 upsertPlaylist 호출
-        await playlistCachier.upsertPlaylist(
-            new YTPlaylistDTO(
+        const ytPlaylistDTOs: YTPlaylistDTO[] = Array.from({length: 20}, (_, index) => {
+            return new YTPlaylistDTO(
                 new YTPlaylistHeadDTO(
-                    "test_id_001",
+                    `test_id_00${index}`,
                     "https://www.youtube.com/playlist?list=PL_test_001",
-                    "테스트-제목#1",
+                    `테스트-제목#${index}`,
                     "https://i.ytimg.com/vi/123/hqdefault.jpg",
                     false,
-                    new YTChannelInfoDTO("channel_id_001", "테스트-채널이름#1", 1234123123,"https://i.ytimg.com/channel/123.jpg"),
+                    new YTChannelInfoDTO("channel_id_001", "플레이리스트헤더테스트-채널이름", 1234123123,"https://i.ytimg.com/channel/123.jpg"),
                     YTPlaylistTypeDTO.VIDEO
                 ),
                 new YTPlaylistBodyDTO(
@@ -153,14 +148,41 @@ const playlistCachier = new PlaylistCachier(clientURL, clientKey);
                     MusicPlatformTypeDTO.APPLE,
                     3,
                     [
-                        new MusicInfoTableDTO("노래이름이자나", "isrc_001"),
-                        new MusicInfoTableDTO("App노래le", "isrc_002"),
-                        new MusicInfoTableDTO("그렇지", "isrc_003"),
+                        new MusicInfoTableDTO(`노래이름이자나#${index}`, "isrc_001"),
+                        new MusicInfoTableDTO(`App노래le#${index}`, "isrc_002"),
+                        new MusicInfoTableDTO(`그렇지#${index}`, "isrc_003"),
                     ],
                     [10, 20, 30]
                 )
             )
-        );
+        });
+
+        for (const ytPlaylistDTO of ytPlaylistDTOs) {
+        //     console.log("ytPlaylistDTO: ", {
+        //         id: ytPlaylistDTO.head.id,
+        //         date: new Date().toISOString(),
+        //         locale: "KR",
+        //         channelID: ytPlaylistDTO.head.channel.id
+        //     });
+        // 사용자가 작성한 테스트 데이터로 upsertPlaylist 호출
+            await playlistCachier.upsertPlaylist(ytPlaylistDTO);
+            const response = await fetch(`${clientURL}/sqoops/log`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${clientKey}`
+                },
+                body: JSON.stringify({
+                    id: ytPlaylistDTO.head.id,
+                    date: new Date().toISOString(),
+                    locale: "KR",
+                    channelID: ytPlaylistDTO.head.channel.id
+                })
+            })
+            console.log("response: ", response);
+            if (!response.ok) {
+                throw new Error(`HTTP 에러! 상태: ${response.status}, 메시지: ${response.statusText}`);
+            }
+        }
 
         console.log("✅ 테스트 성공: 데이터가 성공적으로 처리되었습니다.");
 

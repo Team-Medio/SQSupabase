@@ -14,7 +14,6 @@ export const MostChannelsQuery = {
         };
         
         const tableName: string = periodMostTable[periodType] ?? "";
-        console.log("테이블 이름:",tableName);
         return await supabase.rpc(tableName, {
              now_date: date.toDateString(), 
              limit_count: limit 
