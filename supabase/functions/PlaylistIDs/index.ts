@@ -31,7 +31,7 @@ Deno.serve(async (req: Request) => {
         const limitCount: number = Number(params.get("limitcount")) ?? 0;
           switch(filterType){
             case FilterType.RECENT: {
-              const { data, error } = await RecentQuery.PlaylistHeadAccessDateVersion(supabase, limitCount);
+              const { data, error } = await RecentQuery.RecentSqoopedPlaylistsVersion(supabase, limitCount);
               return error ? ErrorResponse(error.message, 500) : SuccessResponse(data?.map((x: { id: string }) => x.id) ?? []);
             }
             case FilterType.MOST: {
@@ -55,13 +55,6 @@ Deno.serve(async (req: Request) => {
             now_date: json.date,
             country_code: json.locale
           });
-        // const json: InsertValueModel_v2 = await req.json();
-        // const res = await supabase.rpc('insert_sqooped_log_v2', { 
-        //     playlistid: json.id,
-        //     nowdate: json.date,
-        //     channelid: json.channelID,
-        //     countrycode: json.locale
-        //   });
         return res.error ?
           ErrorResponse(res.error.message, 500) :
           SuccessResponse(json);
