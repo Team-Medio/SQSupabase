@@ -28,23 +28,27 @@ export class ChartsPlaylists {
         switch(filterType){
           case FilterType.RECENT: {
           const { data, error } = await this.supabase.from('RecentSqoopedPlaylists')
-          .select()
+          .select('id')
           .order('sqooped_date', { ascending: false })
           .limit(limitCount);
-          return error ? ErrorResponse(error.message, 500) : SuccessResponse(data?.map((x: { id: string }) => x.id) ?? []);
+          if (error) return ErrorResponse(error.message, 500);
+          const rows = Array.isArray(data) ? data : [];
+          return SuccessResponse(rows.map((x: { id: string }) => x.id));
         }
         case FilterType.MOST: {
-          const periodType: PeriodType = params.get("period") as PeriodType ?? "";
+          const periodType: PeriodType | null = params.get("period") as PeriodType | null;
+          if(periodType === null) return ErrorResponse(`잘못된 period 파라미터`, 400);
           const date: Date = new Date(params.get("date") as string);
           const {data, error} = await MostPlaylistsQuery.v1(this.supabase, periodType, date, limitCount);
           return error ? ErrorResponse(error.message, 500) : SuccessResponse(data);
         }
         default: {
-          return ErrorResponse(`FilterTypeError ${filterType}`, 401);
+          return ErrorResponse(`잘못된 period 파라미터 ${filterType}`, 400);
         }
       }
       } catch (err) {
-        return new Response(String(err?.message ?? err), { status: 500 })
+        const message = err instanceof Error ? err.message : JSON.stringify(err);
+        return ErrorResponse(message, 500);
       }
     }
   }
