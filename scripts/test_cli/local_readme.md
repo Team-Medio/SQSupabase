@@ -1,11 +1,9 @@
-# Edge Functions 테스트 가이드
+# Sqoop API
+스쿱의 플레이리스트 관련 데이터를 수집 및 조회를 위한 API 입니다. <br/>
+## 사용 방법
 
-## 사전 준비
-
-### 1. Python 의존성 설치
-```bash
-pip install -r requirements.txt
-```
+### 1. Sqoop Supabase URL 인가
+### 2. Supabase Anon Key 인가
 
 ### 2. 환경 변수 설정
 ```bash
