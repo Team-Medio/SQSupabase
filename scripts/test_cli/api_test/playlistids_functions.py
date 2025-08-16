@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-SQSupabase Edge Functions 로컬 테스트 스크립트
+SQSupabase PlaylistIDs Edge Functions 로컬 테스트 스크립트
 
 사용법:
 1. Supabase 로컬 서버 시작: supabase start
-2. 스크립트 실행: python test_edge_functions.py
+2. 스크립트 실행: python playlistids_functions.py
 
 환경 변수 설정 (선택사항):
 - SUPABASE_URL: Supabase URL (기본값: 로컬)
@@ -26,10 +26,9 @@ except ImportError:
     # python-dotenv가 설치되지 않은 경우 무시
     pass
 
-class EdgeFunctionTester:
+class PlaylistIDsFunctionTester:
     def __init__(self):
         # 로컬 Supabase 설정 (기본값)
-
         self.base_url = os.getenv('SUPABASE_URL', 'http://127.0.0.1:54321/functions/v1')
         
         # 환경 변수에서 토큰 가져오기
@@ -50,14 +49,20 @@ class EdgeFunctionTester:
             "Content-Type": "application/json"
         }
         
-        print(f"🚀 Edge Functions Tester 시작")
+        print(f"🚀 PlaylistIDs Edge Functions Tester 시작")
         print(f"📍 Base URL: {self.base_url}")
         print(f"🔑 Auth Token: {self.auth_token[:20]}...{self.auth_token[-10:]}")
         print("-" * 60)
 
-    def make_request(self, endpoint: str, method: str = "GET", data: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    def make_request(self, endpoint: str, method: str = "GET", data: Optional[Dict[str, Any]] = None, params: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
         """API 요청을 보내고 응답을 반환합니다."""
         url = f"{self.base_url}{endpoint}"
+        
+        # GET 요청에 쿼리 파라미터 추가
+        if method.upper() == "GET" and params:
+            query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+            url = f"{url}?{query_string}"
+        
         print(f"url: {url}")
         try:
             print(f"📤 {method} {endpoint}")
@@ -97,24 +102,63 @@ class EdgeFunctionTester:
         finally:
             print("-" * 40)
     
-    def test_sqoops_log(self):
-        """sqoops post 로컬 값 보내기 테스트"""
-        print("📱 sqoops 값 보내기 테스트")
-        endpoint = "/sqoops/log"
+    def test_playlistids_post(self):
+        """PlaylistIDs POST 요청 테스트 (플레이리스트 ID 등록)"""
+        print("📱 PlaylistIDs POST 테스트 - 플레이리스트 ID 등록")
+        endpoint = "/PlaylistIDs"
         return self.make_request(endpoint, "POST", {
-            "id": f"1234567890_{datetime.now().isoformat()}",
+            "id": f"PL1234567890_{datetime.now().isoformat()}",
             "date": datetime.now().isoformat(),
-            "locale": "KR",
-            "channelID": f"1234567890_{datetime.now().isoformat()}"
+            "locale": "KR"
         })
     
+    def test_playlistids_recent(self, limit_count: int = 10):
+        """PlaylistIDs GET 요청 테스트 - 최근 스쿱된 플레이리스트"""
+        print(f"📱 PlaylistIDs GET 테스트 - 최근 스쿱된 플레이리스트 (limit: {limit_count})")
+        endpoint = "/PlaylistIDs"
+        params = {
+            "filter": "recent",
+            "limitcount": str(limit_count)
+        }
+        return self.make_request(endpoint, "GET", params=params)
+    
+    def test_playlistids_most_week(self, limit_count: int = 10):
+        """PlaylistIDs GET 요청 테스트 - 주간 가장 많이 스쿱된 플레이리스트"""
+        print(f"📱 PlaylistIDs GET 테스트 - 주간 가장 많이 스쿱된 플레이리스트 (limit: {limit_count})")
+        endpoint = "/PlaylistIDs"
+        params = {
+            "filter": "most",
+            "period": "week",
+            "date": datetime.now().isoformat(),
+            "limitcount": str(limit_count)
+        }
+        return self.make_request(endpoint, "GET", params=params)
+    
+    def test_playlistids_most_month(self, limit_count: int = 10):
+        """PlaylistIDs GET 요청 테스트 - 월간 가장 많이 스쿱된 플레이리스트"""
+        print(f"📱 PlaylistIDs GET 테스트 - 월간 가장 많이 스쿱된 플레이리스트 (limit: {limit_count})")
+        endpoint = "/PlaylistIDs"
+        params = {
+            "filter": "most",
+            "period": "month",
+            "date": datetime.now().isoformat(),
+            "limitcount": str(limit_count)
+        }
+        return self.make_request(endpoint, "GET", params=params)
 
     def run_all_tests(self):
         """모든 테스트 실행"""
-        print("🧪 모든 Edge Functions 테스트 시작\n")
+        print("🧪 모든 PlaylistIDs Edge Functions 테스트 시작\n")
         
         results = {}
         
+        # POST 테스트
+        results["POST - 플레이리스트 ID 등록"] = self.test_playlistids_post()
+        
+        # GET 테스트들
+        results["GET - 최근 스쿱된 플레이리스트"] = self.test_playlistids_recent(5)
+        results["GET - 주간 가장 많이 스쿱된 플레이리스트"] = self.test_playlistids_most_week(5)
+        results["GET - 월간 가장 많이 스쿱된 플레이리스트"] = self.test_playlistids_most_month(5)
         
         print("✨ 모든 테스트 완료!")
         print("\n📊 테스트 결과 요약:")
@@ -138,7 +182,12 @@ class EdgeFunctionTester:
         """대화형 테스트 모드"""
         print("\n🎮 대화형 테스트 모드")
         print("사용 가능한 명령어:")
-        print("  1. recent    - PlaylistIDs Recent 테스트")
+        print("  1. post      - 플레이리스트 ID 등록 (POST)")
+        print("  2. recent    - 최근 스쿱된 플레이리스트 (GET)")
+        print("  3. week      - 주간 가장 많이 스쿱된 플레이리스트 (GET)")
+        print("  4. month     - 월간 가장 많이 스쿱된 플레이리스트 (GET)")
+        print("  5. all       - 모든 테스트 실행")
+        print("  quit/q/exit  - 종료")
         
         while True:
             try:
@@ -147,8 +196,22 @@ class EdgeFunctionTester:
                 if command in ['quit', 'q', 'exit']:
                     print("👋 테스트 종료!")
                     break
-                elif command == '1' or command == 'recent':
-                    self.test_sqoops_log()
+                elif command == '1' or command == 'post':
+                    self.test_playlistids_post()
+                elif command == '2' or command == 'recent':
+                    limit = input("개수 제한 (기본값: 10): ").strip()
+                    limit_count = int(limit) if limit.isdigit() else 10
+                    self.test_playlistids_recent(limit_count)
+                elif command == '3' or command == 'week':
+                    limit = input("개수 제한 (기본값: 10): ").strip()
+                    limit_count = int(limit) if limit.isdigit() else 10
+                    self.test_playlistids_most_week(limit_count)
+                elif command == '4' or command == 'month':
+                    limit = input("개수 제한 (기본값: 10): ").strip()
+                    limit_count = int(limit) if limit.isdigit() else 10
+                    self.test_playlistids_most_month(limit_count)
+                elif command == '5' or command == 'all':
+                    self.run_all_tests()
                 else:
                     print("❓ 알 수 없는 명령어입니다.")
                     
@@ -161,10 +224,10 @@ class EdgeFunctionTester:
 
 def main():
     """메인 함수"""
-    print("🎯 SQSupabase Edge Functions 테스터")
+    print("🎯 SQSupabase PlaylistIDs Edge Functions 테스터")
     print("=" * 60)
     
-    tester = EdgeFunctionTester()
+    tester = PlaylistIDsFunctionTester()
     tester.interactive_test()
 
 if __name__ == "__main__":
