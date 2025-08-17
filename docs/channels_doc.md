@@ -34,7 +34,7 @@ curl -X GET 'http://127.0.0.1:54321/functions/v1/channels/playlists?channelId=UC
 **Response Example:**
 ```json
 {
-  "playlistHeads": [
+  "PlaylistHeads": [
     {
       "id": "PLrAXtmRdnEQy4Atom665uJjjHfXlrxg2m",
       "originURL": "https://www.youtube.com/playlist?list=PLrAXtmRdnEQy4Atom665uJjjHfXlrxg2m",
@@ -51,7 +51,7 @@ curl -X GET 'http://127.0.0.1:54321/functions/v1/channels/playlists?channelId=UC
       "ytPlaylistType": "Official"
     }
   ],
-  "failedPlaylistIds": []
+  "FailedPlaylistIds": []
 }
 ```
 - 정보 조회에 성공한 데이터: *playlistHeads*

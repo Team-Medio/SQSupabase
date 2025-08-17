@@ -13,7 +13,7 @@ import { YTChannelInfo } from "../../../common/Models/YTChannelInfo.ts";
  */
 type RecentChannelsBatchResponse = {
   RecentChannelResponses: RecentChannelInfo[];
-  FailedChannelIds: string[];
+  FailedChannelIDs: string[];
 }
 
 /**
@@ -31,7 +31,7 @@ type RecentChannelInfo = {
  */
 type IndividualChannelQueryResult = {
   RecentChannelResponse: RecentChannelInfo | null;
-  FailedChannelId: string | null;
+  FailedChannelID: string | null;
 }
 
 export class ChartChannelsRecent {
@@ -79,14 +79,14 @@ export class ChartChannelsRecent {
         }
         return {
           RecentChannelResponse: channelResponse,
-          FailedChannelId: null
+          FailedChannelID: null
         }
       }));
-      const failedIds = channelResults.filter(result => result.FailedChannelId !== null).map(result => result.FailedChannelId as string);
+      const failedIds = channelResults.filter(result => result.FailedChannelID !== null).map(result => result.FailedChannelID as string);
       const channelResponses = channelResults.filter(result => result.RecentChannelResponse !== null).map(result => result.RecentChannelResponse as RecentChannelInfo);
       const successResponse: RecentChannelsBatchResponse = {
         RecentChannelResponses: channelResponses ?? [],
-        FailedChannelIds: failedIds ?? []
+        FailedChannelIDs: failedIds ?? []
       }
       return successResponse; 
     }

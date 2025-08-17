@@ -13,7 +13,7 @@ type RequestPlaylistHeadResult = {
 
 type PlaylistHeadsResponse = {
   PlaylistHeads: YTPlaylistHead[];
-  FailedPlaylistIds: string[];
+  FailedPlaylistIDs: string[];
 }
 
 export class ChartsPlaylists {
@@ -57,7 +57,7 @@ export class ChartsPlaylists {
           if(error) return ErrorResponse(error.message, 500);
 
           const playlistIds: string[] = Array.isArray(data) ? data : [];
-          const playlistHeads = await this.getPlaylistHeads(playlistIds);
+          const playlistHeads: PlaylistHeadsResponse = await this.getPlaylistHeads(playlistIds);
           return SuccessResponse(playlistHeads);
         }
         default: {
@@ -71,30 +71,23 @@ export class ChartsPlaylists {
     }
 
     private async getPlaylistHeads(playlistIds: string[]): Promise<PlaylistHeadsResponse> {
-      const playlistResults: RequestPlaylistHeadResult[]  = await Promise.all(playlistIds.map(async (playlistId) => {
-        const { data: playlistHeadData, error: playlistHeadError } = await this.supabase.from('YTPlaylistHead').select('*').eq('id', playlistId).single();
-        if(playlistHeadError) {
+      
+      const playlistResults: RequestPlaylistHeadResult[]  = await Promise.all(
+        playlistIds.map( async (playlistId) => {
+          const { data: playlistHeadData, error: playlistHeadError } = await this.supabase.from('YTPlaylistHead').select('*').eq('id', playlistId).single();
+          if(playlistHeadError) {
             return { playlistHead: null, failedID: playlistId };
-        }
-        const headTable = playlistHeadData as YTPlaylistHead;
-        const playlistHead: YTPlaylistHead = {
-            id: headTable.id,
-            originURL: headTable.originURL,
-            insertedDate: headTable.insertedDate,
-            isShazamed: headTable.isShazamed,
-            thumbnailURL: headTable.thumbnailURL,
-            title: headTable.title,
-            channel: headTable.channel,
-            ytPlaylistType: headTable.ytPlaylistType
-        }
-        return { playlistHead: playlistHead, failedID: null };
-    }));
-    const failedIds = playlistResults.filter(result => result.failedID !== null).map(result => result.failedID as string);
-    const playlistHeads = playlistResults.filter(result => result.playlistHead !== null).map(result => result.playlistHead as YTPlaylistHead);
-    const successResponse: PlaylistHeadsResponse = {
-      PlaylistHeads: playlistHeads ?? [],
-      FailedPlaylistIds: failedIds ?? []  
-    };
-    return successResponse;
+          }
+          const headTable = playlistHeadData as YTPlaylistHead;
+          return { playlistHead: headTable, failedID: null };
+        })
+      );
+      const failedIds = playlistResults.filter(result => result.failedID !== null).map(result => result.failedID as string);
+      const playlistHeads = playlistResults.filter(result => result.playlistHead !== null).map(result => result.playlistHead as YTPlaylistHead);
+      const successResponse: PlaylistHeadsResponse = {
+        PlaylistHeads: playlistHeads ?? [],
+        FailedPlaylistIDs: failedIds ?? []  
+      };
+      return successResponse;
     }
   }

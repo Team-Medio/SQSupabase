@@ -11,7 +11,7 @@ import { YTChannelInfo } from "../../../common/Models/YTChannelInfo.ts";
  */
 type ChannelsWithFailures = {
     MostChannelResponses: ChannelWithSqoopCount[];
-    FailedChannelIds: string[];
+    FailedChannelIDs: string[];
 };
   
 // 데이터베이스 쿼리 결과로 반환되는 채널별 sqoop 카운트 데이터
@@ -33,7 +33,7 @@ type ChannelWithSqoopCount = {
  */
 type ChannelInfoResult = {
     MostChannelResponse: ChannelWithSqoopCount | null;
-    FailedChannelId: string | null;
+    FailedChannelID: string | null;
 };
 
 export class ChartChannelsMost {
@@ -92,7 +92,7 @@ export class ChartChannelsMost {
       const channelResults: ChannelInfoResult[]  = await Promise.all(responses.map(async (response) => {
         const { data: channelInfo, error: channelHeadError } = await this.supabase.from('YTChannelInfo').select('*').eq('id', response.channel_id).single();
         if(channelHeadError) {
-            return { MostChannelResponse: null, FailedChannelId: response.channel_id };
+            return { MostChannelResponse: null, FailedChannelID: response.channel_id };
         }
         const headTable = channelInfo as YTChannelInfo;
         const channelResponse: ChannelWithSqoopCount = {
@@ -102,17 +102,17 @@ export class ChartChannelsMost {
         }
         return {
           MostChannelResponse: channelResponse,
-          FailedChannelId: null
+          FailedChannelID: null
         }
     }));
     
     // 성공한 채널들과 실패한 채널 ID들을 분리
-    const failedIds = channelResults.filter(result => result.FailedChannelId !== null).map(result => result.FailedChannelId as string);
+    const failedIds = channelResults.filter(result => result.FailedChannelID !== null).map(result => result.FailedChannelID as string);
     const channelResponses = channelResults.filter(result => result.MostChannelResponse !== null).map(result => result.MostChannelResponse as ChannelWithSqoopCount);
     
     const successResponse: ChannelsWithFailures = {
       MostChannelResponses: channelResponses ?? [],
-      FailedChannelIds: failedIds ?? []
+      FailedChannelIDs: failedIds ?? []
     }
     return successResponse; 
     }
