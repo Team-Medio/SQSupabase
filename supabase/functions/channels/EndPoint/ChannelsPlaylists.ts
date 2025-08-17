@@ -76,7 +76,7 @@ export class ChannelsPlaylist {
             const playlistHeads = playlistResults.filter(result => result.playlistHead !== null).map(result => result.playlistHead);
             const successResponse = {
                 PlaylistHeads: playlistHeads,
-                FailedPlaylistIds: failedIds
+                FailedPlaylistIDs: failedIds
             };
             return SuccessResponse(successResponse);
         } catch (error) {
