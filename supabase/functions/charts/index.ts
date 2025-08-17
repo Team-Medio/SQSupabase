@@ -9,7 +9,7 @@ import { ErrorResponse } from "../common/Models/Responses.ts";
 import { defaultClient } from "../common/Helpers/defaultClient.ts";
 import { checkAuthorization } from "../common/Helpers/checkAuthorization.ts";
 import { ChartsPlaylists } from "./EndPoint/ChartPlaylists.ts";
-import { ChartsChannels } from "./EndPoint/ChartChannels.ts";
+import { ChartsChannels } from "./EndPoint/ChartChannels/ChartChannels.ts";
 
 Deno.serve(async (req) => {
   const error = checkAuthorization(req);

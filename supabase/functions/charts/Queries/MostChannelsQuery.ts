@@ -10,7 +10,7 @@ export const MostChannelsQuery = {
         date: Date,
         limit: number) => {
         const periodMostTable = {
-            [PeriodType.WEEK]: "get_weekly_most_sqooped_channels_v1",
+            [PeriodType.WEEK]: "get_weekly_most_sqooped_channels_v3",
             [PeriodType.MONTH]: "MonthlyMostSqoopedChannels",
         };
         
@@ -19,7 +19,8 @@ export const MostChannelsQuery = {
         return await supabase.rpc(tableName, {
              now_date: date.toDateString(), 
              limit_count: limit 
-            });
+            }
+        );
     }
   };
   
