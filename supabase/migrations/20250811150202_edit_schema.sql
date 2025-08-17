@@ -87,6 +87,7 @@ BEGIN
     (playlistID, v_today_date, v_watch_system, channelID, countryCode, 1)
     ON CONFLICT ("id", "sqooped_date", "watch_system", "channel_id")
     DO UPDATE SET "sqoop_count" = "ChartData"."sqoop_count" + 1;
+    
 
     INSERT INTO "RecentSqoopedPlaylists" ("id", "sqooped_date")
     VALUES (playlistID, nowDate)

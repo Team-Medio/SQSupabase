@@ -46,6 +46,7 @@ class PlaylistCachier {
         // 2. YTChannelInfo 먼저 삽입 (DTO는 이미 toJSON을 가지고 있음)
         const { error: channelError } = await this.client.from('YTChannelInfo').upsert(channelInfo.toJSON()).select();
         if (channelError) throw new Error(`YTChannelInfo Upsert 실패: ${channelError.message}`);
+        this.insertPlaylistData(headDataTable.id, data.body);
     }
 
     private async insertPlaylistData(metaDataID: string, playlistData: YTPlaylistBodyDTO) {

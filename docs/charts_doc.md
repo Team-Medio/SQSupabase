@@ -32,8 +32,8 @@ GET /functions/v1/charts/playlists
 
 ### 파라미터 타입
  **filter**
-- `recent`: 최근 스쿱된 항목들을 시간 역순으로 정렬
-- `most`: 지정된 기간 동안 가장 많이 스쿱된 항목들을 스쿱 개수 순으로 정렬
+- `recent`: 최근 스쿱된 항목들을 시간 역순으로 정렬, 순서 보장
+- `most`: 지정된 기간 동안 가장 많이 스쿱된 항목들을 스쿱 개수 순으로 정렬, 순서 보장
 
 **period(filter=most일 때만 사용)**
 - `week`: 주간 통계
@@ -63,20 +63,67 @@ curl -X GET "https://[YOUR_PROJECT_REF].supabase.co/functions/v1/charts/playlist
 
 **최근 스쿱된 플레이리스트:**
 ```json
-[
-    "playlist_id1",
-    "playlist_id2",
-    "playlist_id3"
-]
+{
+  "PlaylistHeads": [
+    {
+      "id": "test_id_0013",
+      "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
+      "insertedDate": "2025-08-16T17:25:44.286+00:00",
+      "isShazamed": false,
+      "thumbnailURLString": "https://i.ytimg.com/vi/123/hqdefault.jpg",
+      "playlistType": "Video",
+      "title": "테스트-제목#13",
+      "channelID": "channel_id_001"
+    },
+    {
+      "id": "test_id_0012",
+      "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
+      "insertedDate": "2025-08-16T17:25:44.286+00:00",
+      "isShazamed": false,
+      "thumbnailURLString": "https://i.ytimg.com/vi/123/hqdefault.jpg",
+      "playlistType": "Video",
+      "title": "테스트-제목#12",
+      "channelID": "channel_id_001"
+    }
+  ],
+  "FailedPlaylistIDs": [
+    "failed_playlist_id_1",
+    "failed_playlist_id_2"
+  ]
+}
 ```
+
 
 **가장 많이 스쿱된 플레이리스트:**
 ```json
-[
-    "playlist_id1",
-    "playlist_id2",
-    "playlist_id3"
-]
+{
+  "PlaylistHeads": [
+    {
+      "id": "test_id_0013",
+      "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
+      "insertedDate": "2025-08-16T17:25:44.286+00:00",
+      "isShazamed": false,
+      "thumbnailURLString": "https://i.ytimg.com/vi/123/hqdefault.jpg",
+      "playlistType": "Video",
+      "title": "테스트-제목#13",
+      "channelID": "channel_id_001"
+    },
+    {
+      "id": "test_id_0012",
+      "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
+      "insertedDate": "2025-08-16T17:25:44.286+00:00",
+      "isShazamed": false,
+      "thumbnailURLString": "https://i.ytimg.com/vi/123/hqdefault.jpg",
+      "playlistType": "Video",
+      "title": "테스트-제목#12",
+      "channelID": "channel_id_001"
+    }
+  ],
+  "FailedPlaylistIDs": [
+    "failed_playlist_id_1",
+    "failed_playlist_id_2"
+  ]
+}
 ```
 
 ### 2. 채널 차트 (`/channels`)
@@ -128,20 +175,44 @@ curl -X GET "https://[YOUR_PROJECT_REF].supabase.co/functions/v1/charts/channels
 
 **최근 스쿱된 채널:**
 ```json
-[
-    "playlist_id1",
-    "playlist_id2",
-    "playlist_id3"
-]
+{
+  "RecentChannelResponses": [
+    {
+      "channel_id": "channel_id_001",
+      "channel_name": "채널이름_001"
+    },
+    {
+      "channel_id": "channel_id_002",
+      "channel_name": "채널이름_002"
+    }
+  ],
+  "FailedChannelIDs": [
+    "채널이름_003",
+    "채널이름_004"
+  ]
+}
 ```
 
 **가장 많이 스쿱된 채널:**
 ```json
-[
-    "playlist_id1",
-    "playlist_id2",
-    "playlist_id3"
-]
+{
+  "MostChannelResponses": [
+    {
+      "channel_id": "channel_id_001",
+      "channel_name": "채널이름_001",
+      "sqoop_count": 20
+    },
+    {
+      "channel_id": "channel_id_002",
+      "channel_name": "채널이름_002",
+      "sqoop_count": 128
+    }
+  ],
+  "FailedChannelIDs": [
+    "채널이름_003",
+    "채널이름_004"
+  ]
+}
 ```
 
 ## 필터 타입
