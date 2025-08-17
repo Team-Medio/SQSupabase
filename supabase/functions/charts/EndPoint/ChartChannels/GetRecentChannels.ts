@@ -58,7 +58,7 @@ export class ChartChannelsRecent {
         .order('sqooped_date', { ascending: false })
         .limit(limitCount);
         if(error) return ErrorResponse(error.message, 500);
-        const channelIds = Array.isArray(data.map((x: { channel_id: string }) => x.channel_id)) ? data.map((x: { channel_id: string }) => x.channel_id) : [];
+        const channelIds = (data ?? []).map((x: { channel_id: string }) => x.channel_id);
         const channelRecentResponse = await this.getRecentChannelInfos(channelIds);
         return SuccessResponse(channelRecentResponse);
       } catch (err) {
