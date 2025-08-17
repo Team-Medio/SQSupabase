@@ -70,7 +70,7 @@ export class ChartChannelsRecent {
       const channelResults: IndividualChannelQueryResult[]  = await Promise.all(channelIds.map(async (channelId) => {
         const { data: channelInfo, error: channelHeadError } = await this.supabase.from('YTChannelInfo').select('*').eq('id', channelId).single();
         if(channelHeadError) {
-          return { RecentChannelResponse: null, FailedChannelId: channelId };
+          return { RecentChannelResponse: null, FailedChannelID: channelId };
         }
         const headTable = channelInfo as YTChannelInfo;
         const channelResponse = {
