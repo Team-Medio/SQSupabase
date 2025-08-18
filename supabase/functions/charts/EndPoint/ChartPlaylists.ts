@@ -5,6 +5,7 @@ import { FilterType } from "../Models/FilterType.ts";
 import { PeriodType } from "../Models/PeriodType.ts";
 import { MostPlaylistsQuery } from "../Queries/MostPlaylistsQuery.ts";
 import { YTPlaylistHead } from "../../common/Models/YTPlaylistHead.ts";
+import { YTChannelInfo } from "../../common/Models/YTChannelInfo.ts";
 
 type RequestPlaylistHeadResult = {
   playlistHead: YTPlaylistHead | null;
@@ -78,8 +79,23 @@ export class ChartsPlaylists {
           if(playlistHeadError) {
             return { playlistHead: null, failedID: playlistId };
           }
-          const headTable = playlistHeadData as YTPlaylistHead;
-          return { playlistHead: headTable, failedID: null };
+          const channelId = playlistHeadData.channelID;
+          const { data: channelData, error: channelError } = await this.supabase.from('YTChannelInfo').select('*').eq('id', channelId).single();
+          if(channelError) {
+            return { playlistHead: null, failedID: playlistId };
+          }
+          const channel = channelData as YTChannelInfo;
+          const playlistHead: YTPlaylistHead = {
+            id: playlistHeadData.id,
+            originURL: playlistHeadData.originURL,
+            insertedDate: playlistHeadData.insertedDate,
+            isShazamed: playlistHeadData.isShazamed,
+            thumbnailURL: playlistHeadData.thumbnailURLString,
+            title: playlistHeadData.title,
+            channel: channel,
+            ytPlaylistType: playlistHeadData.playlistType
+          }
+          return { playlistHead: playlistHead, failedID: null };
         })
       );
       const failedIds = playlistResults.filter(result => result.failedID !== null).map(result => result.failedID as string);

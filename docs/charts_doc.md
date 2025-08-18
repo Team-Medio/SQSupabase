@@ -4,7 +4,7 @@
 Charts Edge Function은 YouTube 플레이리스트와 채널의 차트 데이터를 제공하는 API입니다. 최근 스쿱된 항목과 기간별 가장 많이 스쿱된 항목을 조회할 수 있습니다.
 
 ## BASE URL
-- Production: `https://your-project.supabase.co/functions/v1/channels`
+- Production: `https://your-project.supabase.co/functions/v1/charts`
 
 ## 인증
 모든 요청에는 Authorization 헤더가 필요합니다:

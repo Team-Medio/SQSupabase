@@ -7,7 +7,7 @@ Sqoops API는 YouTube 플레이리스트의 스쿱(재생) 로그를 기록하�
 ## API 엔드포인트
 
 ### Base URL
-- Production: `https://your-project.supabase.co/functions/v1/channels`
+- Production: `https://your-project.supabase.co/functions/v1/sqoops`
 
 ## 엔드포인트
 
