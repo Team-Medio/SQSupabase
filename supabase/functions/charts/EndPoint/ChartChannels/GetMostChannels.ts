@@ -97,11 +97,19 @@ export class ChartChannelsMost {
         }
 
         let headTable = channelInfo as YTChannelInfo;
-        if(headTable.thumbnailURLString === null) {
+        if(headTable.thumbnailURLString === null || headTable.thumbnailURLString === "") {
           try {
             headTable = await ChannelHelper.upsertEmptyThumbnailChannel(this.supabase, headTable);
           } catch (err) {
-            return { success: null, failed: response.channel_id };
+            return { 
+              success: {
+                channel_id: headTable.id,
+                channel_name: headTable.name,
+                channel_thumbnail: headTable.thumbnailURLString,
+                sqoop_count: response.sqoop_count
+              },
+              failed: null
+            };
           }
         }
         

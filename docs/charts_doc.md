@@ -63,9 +63,9 @@ curl -X GET "https://[YOUR_PROJECT_REF].supabase.co/functions/v1/charts/playlist
 
 **최근 스쿱된 플레이리스트:**
 ```json
-{
-  "PlaylistHeads": [
-    {
+[
+  {
+    "success" : {
       "id": "test_id_0013",
       "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
       "insertedDate": "2025-08-16T17:25:44.286+00:00",
@@ -75,30 +75,17 @@ curl -X GET "https://[YOUR_PROJECT_REF].supabase.co/functions/v1/charts/playlist
       "title": "테스트-제목#13",
       "channelID": "channel_id_001"
     },
-    {
-      "id": "test_id_0012",
-      "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
-      "insertedDate": "2025-08-16T17:25:44.286+00:00",
-      "isShazamed": false,
-      "thumbnailURLString": "https://i.ytimg.com/vi/123/hqdefault.jpg",
-      "playlistType": "Video",
-      "title": "테스트-제목#12",
-      "channelID": "channel_id_001"
-    }
-  ],
-  "FailedPlaylistIDs": [
-    "failed_playlist_id_1",
-    "failed_playlist_id_2"
-  ]
-}
+    "failed" : "failed_playlist_id"
+  }
+]
 ```
 
 
 **가장 많이 스쿱된 플레이리스트:**
 ```json
-{
-  "PlaylistHeads": [
-    {
+[
+  {
+    "success" : {
       "id": "test_id_0013",
       "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
       "insertedDate": "2025-08-16T17:25:44.286+00:00",
@@ -108,22 +95,9 @@ curl -X GET "https://[YOUR_PROJECT_REF].supabase.co/functions/v1/charts/playlist
       "title": "테스트-제목#13",
       "channelID": "channel_id_001"
     },
-    {
-      "id": "test_id_0012",
-      "originURL": "https://www.youtube.com/playlist?list=PL_test_001",
-      "insertedDate": "2025-08-16T17:25:44.286+00:00",
-      "isShazamed": false,
-      "thumbnailURLString": "https://i.ytimg.com/vi/123/hqdefault.jpg",
-      "playlistType": "Video",
-      "title": "테스트-제목#12",
-      "channelID": "channel_id_001"
-    }
-  ],
-  "FailedPlaylistIDs": [
-    "failed_playlist_id_1",
-    "failed_playlist_id_2"
-  ]
-}
+    "failed" : "failed_playlist_id"
+  }
+]
 ```
 
 ### 2. 채널 차트 (`/channels`)
@@ -175,44 +149,31 @@ curl -X GET "https://[YOUR_PROJECT_REF].supabase.co/functions/v1/charts/channels
 
 **최근 스쿱된 채널:**
 ```json
-{
-  "RecentChannelResponses": [
-    {
+[
+  {
+    "success" : {
       "channel_id": "channel_id_001",
-      "channel_name": "채널이름_001"
+      "channel_name": "채널이름_001",
+      "channel_thumbnail": "채널 썸네일 URL"
     },
-    {
-      "channel_id": "channel_id_002",
-      "channel_name": "채널이름_002"
-    }
-  ],
-  "FailedChannelIDs": [
-    "채널이름_003",
-    "채널이름_004"
-  ]
-}
+    "failed" : "failed_channel_id"
+  }
+]
 ```
 
 **가장 많이 스쿱된 채널:**
 ```json
-{
-  "MostChannelResponses": [
-    {
+[
+  {
+    "success" : {
       "channel_id": "channel_id_001",
       "channel_name": "채널이름_001",
+      "channel_thumbnail": "채널 썸네일 URL",
       "sqoop_count": 20
     },
-    {
-      "channel_id": "channel_id_002",
-      "channel_name": "채널이름_002",
-      "sqoop_count": 128
-    }
-  ],
-  "FailedChannelIDs": [
-    "채널이름_003",
-    "채널이름_004"
-  ]
-}
+    "failed" : "failed_channel_id"
+  }
+]
 ```
 
 ## 필터 타입

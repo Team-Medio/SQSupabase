@@ -9,8 +9,8 @@ import { YTPlaylistHeadTable } from "../Models/YTPlaylistHeadTable.ts";
 // 조회 성공시 타입 변환 후 반환
 // 조회 실패시 실패한 ID 반환
 type RequestPlaylistHeadResult = {
-    playlistHead: YTPlaylistHead | null;
-    failedID: string | null;
+    success: YTPlaylistHead | null;
+    failed: string | null;
 }
 
 export class ChannelsPlaylist {
@@ -56,7 +56,7 @@ export class ChannelsPlaylist {
             const playlistResults: RequestPlaylistHeadResult[]  = await Promise.all(playlistIds.map(async (playlistId) => {
                 const { data: playlistHeadData, error: playlistHeadError } = await this.supabase.from('YTPlaylistHead').select('*').eq('id', playlistId).single();
                 if(playlistHeadError) {
-                    return { playlistHead: null, failedID: playlistId };
+                    return { success: null, failed: playlistId };
                 }
                 const headTable = playlistHeadData as YTPlaylistHeadTable;
                 const playlistHead: YTPlaylistHead = {
@@ -69,16 +69,10 @@ export class ChannelsPlaylist {
                     channel: channelTable,
                     ytPlaylistType: headTable.playlistType
                 }
-                return { playlistHead: playlistHead, failedID: null };
+                return { success: playlistHead, failed: null };
             }));
     
-            const failedIds = playlistResults.filter(result => result.failedID !== null).map(result => result.failedID);
-            const playlistHeads = playlistResults.filter(result => result.playlistHead !== null).map(result => result.playlistHead);
-            const successResponse = {
-                PlaylistHeads: playlistHeads,
-                FailedPlaylistIDs: failedIds
-            };
-            return SuccessResponse(successResponse);
+            return SuccessResponse(playlistResults);
         } catch (error) {
             return ErrorResponse("Don't exsit playlist", 404);
         }
