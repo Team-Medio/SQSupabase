@@ -75,8 +75,7 @@ export class ChartChannelsRecent {
               success: {
                 channel_id: headTable.id,
                 channel_name: headTable.name,
-                channel_thumbnail: headTable.thumbnailURLString,
-                sqoop_count: 0
+                channel_thumbnail: headTable.thumbnailURLString
             }, 
             failed: null 
             };
