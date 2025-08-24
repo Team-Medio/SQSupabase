@@ -8,8 +8,8 @@ import { YTPlaylistHead } from "../../common/Models/YTPlaylistHead.ts";
 import { YTChannelInfo } from "../../common/Models/YTChannelInfo.ts";
 
 type RequestPlaylistHeadResult = {
-  playlistHead: YTPlaylistHead | null;
-  failedID: string | null;
+  success: YTPlaylistHead | null;
+  failed: string | null;
 }
 
 type PlaylistHeadsResponse = {
@@ -47,7 +47,7 @@ export class ChartsPlaylists {
 
           const rows = Array.isArray(data) ? data : [];
           const playlistIds = rows.map((x: { id: string }) => x.id);
-          const playlistHeads = await this.getPlaylistHeads(playlistIds);
+          const playlistHeads: RequestPlaylistHeadResult[] = await this.getPlaylistHeads(playlistIds);
           return SuccessResponse(playlistHeads);
         }
         case FilterType.MOST: {
@@ -58,7 +58,7 @@ export class ChartsPlaylists {
           if(error) return ErrorResponse(error.message, 500);
 
           const playlistIds: string[] = Array.isArray(data) ? data : [];
-          const playlistHeads: PlaylistHeadsResponse = await this.getPlaylistHeads(playlistIds);
+          const playlistHeads: RequestPlaylistHeadResult[] = await this.getPlaylistHeads(playlistIds);
           return SuccessResponse(playlistHeads);
         }
         default: {
@@ -71,18 +71,18 @@ export class ChartsPlaylists {
       }
     }
 
-    private async getPlaylistHeads(playlistIds: string[]): Promise<PlaylistHeadsResponse> {
+    private async getPlaylistHeads(playlistIds: string[]): Promise<RequestPlaylistHeadResult[]> {
       
       const playlistResults: RequestPlaylistHeadResult[]  = await Promise.all(
         playlistIds.map( async (playlistId) => {
           const { data: playlistHeadData, error: playlistHeadError } = await this.supabase.from('YTPlaylistHead').select('*').eq('id', playlistId).single();
           if(playlistHeadError) {
-            return { playlistHead: null, failedID: playlistId };
+            return { success: null, failed: playlistId };
           }
           const channelId = playlistHeadData.channelID;
           const { data: channelData, error: channelError } = await this.supabase.from('YTChannelInfo').select('*').eq('id', channelId).single();
           if(channelError) {
-            return { playlistHead: null, failedID: playlistId };
+            return { success: null, failed: playlistId };
           }
           const channel = channelData as YTChannelInfo;
           const playlistHead: YTPlaylistHead = {
@@ -95,15 +95,9 @@ export class ChartsPlaylists {
             channel: channel,
             ytPlaylistType: playlistHeadData.playlistType
           }
-          return { playlistHead: playlistHead, failedID: null };
+          return { success: playlistHead, failed: null };
         })
       );
-      const failedIds = playlistResults.filter(result => result.failedID !== null).map(result => result.failedID as string);
-      const playlistHeads = playlistResults.filter(result => result.playlistHead !== null).map(result => result.playlistHead as YTPlaylistHead);
-      const successResponse: PlaylistHeadsResponse = {
-        PlaylistHeads: playlistHeads ?? [],
-        FailedPlaylistIDs: failedIds ?? []  
-      };
-      return successResponse;
+      return playlistResults;
     }
   }

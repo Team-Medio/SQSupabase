@@ -4,15 +4,13 @@ import { ErrorResponse, SuccessResponse } from "../../../common/Models/Responses
 import { PeriodType } from "../../Models/PeriodType.ts";
 import { MostChannelsQuery } from "../../Queries/MostChannelsQuery.ts";
 import { YTChannelInfo } from "../../../common/Models/YTChannelInfo.ts";
+import { ChannelHelper } from "../../../common/Helpers/ChannelHelper.ts";
 
 /**
  * 차트에서 가장 많이 sqoop된 채널들의 응답 데이터
  * 성공한 채널 정보들과 실패한 채널 ID들을 포함
  */
-type ChannelsWithFailures = {
-    MostChannelResponses: ChannelWithSqoopCount[];
-    FailedChannelIDs: string[];
-};
+
   
 // 데이터베이스 쿼리 결과로 반환되는 채널별 sqoop 카운트 데이터
 type ChannelSqoopCountData = {
@@ -24,6 +22,7 @@ type ChannelSqoopCountData = {
 type ChannelWithSqoopCount = {
     channel_id: string;
     channel_name: string;
+    channel_thumbnail: string;
     sqoop_count: number;
 };
   
@@ -31,9 +30,9 @@ type ChannelWithSqoopCount = {
  * 개별 채널 정보 조회 결과
  * 성공 시 채널 정보를, 실패 시 실패한 채널 ID를 반환
  */
-type ChannelInfoResult = {
-    MostChannelResponse: ChannelWithSqoopCount | null;
-    FailedChannelID: string | null;
+type MostChannelInfoResult = {
+    success: ChannelWithSqoopCount | null;
+    failed: string | null;
 };
 
 export class ChartChannelsMost {
@@ -87,33 +86,41 @@ export class ChartChannelsMost {
      * @param responses 채널 ID와 sqoop 카운트가 포함된 데이터 배열
      * @returns 성공한 채널 정보들과 실패한 채널 ID들을 포함한 응답
      */
-    private async getMostChannelInfos(responses: ChannelSqoopCountData[]): Promise<ChannelsWithFailures> {
-      // 각 채널 ID에 대해 병렬로 채널 정보 조회
-      const channelResults: ChannelInfoResult[]  = await Promise.all(responses.map(async (response) => {
+    private async getMostChannelInfos(responses: ChannelSqoopCountData[]): Promise<MostChannelInfoResult[]> {
+
+      // 각 채널 ID에 대해 채널 정보 조회
+      const channelResults: MostChannelInfoResult[]  = await Promise.all(responses.map(async (response) => {
         const { data: channelInfo, error: channelHeadError } = await this.supabase.from('YTChannelInfo').select('*').eq('id', response.channel_id).single();
+
         if(channelHeadError) {
-            return { MostChannelResponse: null, FailedChannelID: response.channel_id };
+            return { success: null, failed: response.channel_id };
         }
-        const headTable = channelInfo as YTChannelInfo;
+
+        let headTable = channelInfo as YTChannelInfo;
+        if(headTable.thumbnailURLString === null) {
+          try {
+            headTable = await ChannelHelper.upsertEmptyThumbnailChannel(this.supabase, headTable);
+          } catch (err) {
+            return { success: null, failed: response.channel_id };
+          }
+        }
+        
         const channelResponse: ChannelWithSqoopCount = {
           channel_id: headTable.id,
           channel_name: headTable.name,
+          channel_thumbnail: headTable.thumbnailURLString,
           sqoop_count: response.sqoop_count
         }
         return {
-          MostChannelResponse: channelResponse,
-          FailedChannelID: null
+          success: channelResponse,
+          failed: null
         }
     }));
     
     // 성공한 채널들과 실패한 채널 ID들을 분리
-    const failedIds = channelResults.filter(result => result.FailedChannelID !== null).map(result => result.FailedChannelID as string);
-    const channelResponses = channelResults.filter(result => result.MostChannelResponse !== null).map(result => result.MostChannelResponse as ChannelWithSqoopCount);
-    
-    const successResponse: ChannelsWithFailures = {
-      MostChannelResponses: channelResponses ?? [],
-      FailedChannelIDs: failedIds ?? []
+    return channelResults;
     }
-    return successResponse; 
-    }
+
   }
+
+  
