@@ -10,16 +10,22 @@ export class SqoopsLog {
     async action(req: Request): Promise<Response> {
       switch (req.method) {
         case "POST": {
-          const json: ChartDataEntity = await req.json();
+          const json = await req.json();
+          const entity: ChartDataEntity = {
+            id: json.id,
+            date: new Date(json.date),
+            locale: json.locale,
+            channelID: json.channelID
+          }
           const res = await this.supabase.rpc('insert_sqooped_log_v2', { 
-            playlistid: json.id,
-            nowdate: json.date,
-            channelid: json.channelID,
-            countrycode: json.locale
+            playlistid: entity.id,
+            nowdate: entity.date,
+            channelid: entity.channelID,
+            countrycode: entity.locale
           });
           return res.error ?
             ErrorResponse(res.error.message, 500) :
-            SuccessResponse(json);
+            SuccessResponse(entity);
         }
         default: {
           return ErrorResponse(`req.method Method error ${req.method}`, 405);

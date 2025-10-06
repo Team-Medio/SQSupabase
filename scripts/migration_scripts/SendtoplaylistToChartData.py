@@ -3,8 +3,6 @@ import sys
 import time
 import json
 import requests
-import pandas as pd
-import numpy as np
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -38,14 +36,14 @@ class SendToPlaylistToChartData:
     def extract_data(self, start_date, end_date):
         try:
             print(f"데이터 추출 시도: {start_date} ~ {end_date}")
-            data = self.supabase.table("SendToPlaylistDate").select().gte("sqooped_date", start_date).lte("sqooped_date", end_date).execute()
+            data = self.supabase.table("send_to_playlist_date").select().gte("sqooped_date", start_date).lte("sqooped_date", end_date).execute()
             print(f"추출된 데이터 개수: {len(data.data) if data.data else 0}")
             return data
         except Exception as e:
             print(f"데이터 추출 실패: {e}")
             # 테이블 존재 여부 확인을 위한 간단한 쿼리 시도
             try:
-                test_data = self.supabase.table("SendToPlaylistDate").select("*").limit(1).execute()
+                test_data = self.supabase.table("send_to_playlist_date").select("*").limit(1).execute()
                 print("테이블은 존재하지만 날짜 조건에 맞는 데이터가 없거나 다른 문제가 있습니다.")
             except Exception as table_error:
                 print(f"테이블 접근 실패: {table_error}")
@@ -61,18 +59,17 @@ class SendToPlaylistDateToJSONConverter:
     def __init__(self, sendToPlaylistToChartData: SendToPlaylistToChartData):
         self.sendToPlaylistToChartData = sendToPlaylistToChartData
         self.months = [
-            ("2025-01-01", "2025-01-31", "2025-01"),
-            ("2025-02-01", "2025-02-28", "2025-02"),
-            ("2025-03-01", "2025-03-31", "2025-03"),
-            ("2025-04-01", "2025-04-30", "2025-04"),
-            ("2025-05-01", "2025-05-31", "2025-05"),
-            ("2025-06-01", "2025-06-30", "2025-06"),
-            ("2025-07-01", "2025-07-31", "2025-07"),
+            ("2025-09-01", "2025-09-30", "2025-09"),
             ("2025-08-01", "2025-08-31", "2025-08")
             ]
     
     def convertMonths(self, months: list[int]):
-        searchMonths = [self.months[v-1] for v in months]
+        searchMonths = []
+        for month in months:
+            for month_data in self.months:
+                if month_data[2].endswith(f"-{month:02d}"):
+                    searchMonths.append(month_data)
+                    break
         for start_date, end_date, month_label in searchMonths:
             print(f"\n=== {month_label} 데이터 처리 중 ===")
             self._saveMonth(start_date, end_date, month_label)
@@ -109,18 +106,21 @@ class ChartDataToJSONConverter:
 
 # sendToPlaylistToChartData = SendToPlaylistToChartData()
 # sendToPlaylistDateToJSONConverter = SendToPlaylistDateToJSONConverter(sendToPlaylistToChartData)
+# sendToPlaylistDateToJSONConverter.convertMonths([9, 8])
 # marchDatas = sendToPlaylistDateToJSONConverter.getSendToPlaylistData(3)
 
 # 결론: 현재 코드에서는 하나의 비디오 ID만 요청하므로 items[0]으로 첫 번째(유일한) 결과를 가져오는 것이 맞습니다. 배열 구조는 YouTube API의 설계 철학 때문이지, 실제로 여러 비디오가 반환되기 때문은 아닙니다.
 class YoutubeChannelIDGetter:
     baseURL = "https://www.googleapis.com/youtube/v3/"
     video = "videos"
+    playlists = "playlists"
     channels = "channels"
     apiKey = ""
 
     def __init__(self, apiKey: str):
         self.baseURL = "https://www.googleapis.com/youtube/v3/"
         self.video = "videos"
+        self.playlists = "playlists"
         self.channels = "channels"
         self.apiKey = apiKey
 
@@ -143,8 +143,8 @@ class YoutubeChannelIDGetter:
         else:
             return None
     
-    def getPlaylistInfoChannelID(self, playlistId: str):
-        baseURL = f"{self.baseURL}{self.channels}"
+    def getPlaylistInfoChannelID(self, endpoint: str,playlistId: str):
+        baseURL = f"{self.baseURL}{endpoint}"
         params = {
             "part": "snippet",
             "id": playlistId,
@@ -161,6 +161,59 @@ class YoutubeChannelIDGetter:
         else:
             return None
     
+
+
+youtubeChannelIDGetter = YoutubeChannelIDGetter(youtube_api_key)
+def migration_data_sendto_playlist_to_chart_data(months: list[int]):
+    supabase = create_client(os.getenv("SUPABASE_API"), os.getenv("SUPABASE_ANON_KEY"))
+    for month in months:
+        filename = f"./SendToPlaylisMonthlyData/migration_data_2025-0{month}.json"
+        with open(filename, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        chart_datas = []
+        failedPlaylists = []
+        for item in data:
+            print(f"Processing playlist ID: {item['id']}")
+            video_channel_id = youtubeChannelIDGetter.getPlaylistInfoChannelID("videos", item["id"])
+            if video_channel_id:
+                # chart_data 테이블 스키마에 맞게 데이터 변환
+                chart_data_item = {
+                    "id": item["id"],
+                    "sqooped_date": item["sqooped_date"],
+                    "watch_system": item["watch_system"],
+                    "country_code": item.get("country_code"),  # null일 수 있음
+                    "channel_id": video_channel_id,
+                    "sqoop_count": item["sqoop_count"]
+                }
+                chart_datas.append(chart_data_item)
+            else:
+                playlist_channel_id = youtubeChannelIDGetter.getPlaylistInfoChannelID("playlists", item["id"])
+                if playlist_channel_id:
+                    chart_data_item = {
+                        "id": item["id"],
+                        "sqooped_date": item["sqooped_date"],
+                        "watch_system": item["watch_system"],
+                        "country_code": item.get("country_code"),  # null일 수 있음
+                        "channel_id": playlist_channel_id,
+                        "sqoop_count": item["sqoop_count"]
+                    }
+                    chart_datas.append(chart_data_item)
+                else:
+                    print(f"Failed to get channel_id for video: {item['id']}")
+                    print(f"Failed to get channel_id for playlist: {item['id']}")
+                    failedPlaylists.append(item["id"])
+
+        with open(f"./FailedPlaylists/failedPlaylists_{month}.json", 'w', encoding='utf-8') as f:
+            json.dump(failedPlaylists, f, ensure_ascii=False, indent=2, default=str)
+        if chart_datas:
+            try:
+                result = supabase.table("chart_data").insert(chart_datas).execute()
+                print(f"Successfully inserted {len(chart_datas)} records for {month} month data")
+            except Exception as e:
+                print(f"Error inserting data for month {month}: {e}")
+        else:
+            print(f"No valid data to insert for month {month}")
+migration_data_sendto_playlist_to_chart_data([8])
 
 # youtubeEndpoint = YoutubeEndpoint(youtube_api_key)
 
