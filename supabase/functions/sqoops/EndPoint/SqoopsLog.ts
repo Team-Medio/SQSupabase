@@ -11,12 +11,24 @@ export class SqoopsLog {
       switch (req.method) {
         case "POST": {
           const json = await req.json();
-          const entity: ChartDataEntity = {
-            id: json.id,
-            date: new Date(json.date),
-            locale: json.locale,
-            channelID: json.channelID
+          
+          let entity: ChartDataEntity;
+          if (typeof json.date !== 'string') {
+            entity = {
+              id: json.id,
+              date: new Date(json.date * 1000),
+              locale: json.locale,
+              channelID: json.channelID
+            };
+          } else {
+            entity = {
+              id: json.id,
+              date: new Date(json.date),
+              locale: json.locale,
+              channelID: json.channelID
+            };
           }
+          
           const res = await this.supabase.rpc('insert_sqooped_log_v2', { 
             playlistid: entity.id,
             nowdate: entity.date,
