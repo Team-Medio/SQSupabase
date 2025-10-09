@@ -15,7 +15,13 @@ const defaultClient = (authorization: string) => createClient(
 )
 
 Deno.serve(async (req: Request) => {
-  if(Deno.env.get('SUPABASE_ANON_KEY') !== req.headers.get('Authorization')) return ErrorResponse("Authorization error", 401);
+  
+  const authHeader = req.headers.get('Authorization');
+  const authAnonKey = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;  
+  if(Deno.env.get('SUPABASE_ANON_KEY') !== authAnonKey) {
+    return ErrorResponse(`Authorization error`, 401);
+  }
+
   if(req.method !== "GET") return ErrorResponse("Method error", 405);
   try {
     const supabase = defaultClient(req.headers.get('Authorization')!);

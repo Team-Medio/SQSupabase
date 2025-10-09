@@ -6,9 +6,9 @@ const LegacyVersion = async (supabase :SupabaseClient,limit: number) => await su
     .order('access', { ascending: false })
     .limit(limit)
 
-const RecentVersion = async (supabase: SupabaseClient,limit: number) => await supabase.from('RecentSqoopedPlaylists')
+const RecentVersion = async (supabase: SupabaseClient,limit: number) => await supabase.from('recent_sqooped_playlists')
     .select()
-    .order('access', { ascending: false })
+    .order('sqooped_date', { ascending: false })
     .limit(limit)
     
 export const RecentQuery = {
